@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments - Member</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Society Management</h1>
+    <div class="top-bar-right">
+      <span class="badge" id="userBadge">Member</span>
+      <button class="btn btn-text" onclick="logout()" style="color: white;">Logout</button>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <ul>
+      <li><a href="member-dashboard.html">Dashboard</a></li>
+      <li><a href="member-profile.html">Profile</a></li>
+      <li><a href="member-payments.html" class="active">Payments</a></li>
+    </ul>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">Payment History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsTable"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">💰 Payment Feature</h3>
+      <p class="text-muted" style="margin-bottom: 16px;">
+        Coming soon: Online payment integration for society maintenance dues.
+      </p>
+      <p class="text-muted">
+        You'll be able to pay your monthly dues directly through the portal using UPI, cards, or net banking.
+      </p>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    function renderPayments() {
+      const tbody = document.getElementById('paymentsTable');
+      tbody.innerHTML = mockData.payments.map(payment => `
+        <tr>
+          <td>${payment.month}</td>
+          <td>₹${payment.amount.toLocaleString()}</td>
+          <td><span class="status-badge status-${payment.status === 'Paid' ? 'active' : 'pending'}">${payment.status}</span></td>
+          <td>
+            ${payment.status === 'Pending' 
+              ? '<button class="btn btn-primary" style="padding: 6px 16px;" disabled>Pay Now (Soon)</button>' 
+              : '<button class="btn btn-text">View Receipt</button>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    renderPayments();
+  </script>
+</body>
+</html>

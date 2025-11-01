@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members - Society Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Society Management</h1>
+    <div class="top-bar-right">
+      <span class="badge" id="userBadge">Society Admin</span>
+      <button class="btn btn-text" onclick="logout()" style="color: white;">Logout</button>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <ul>
+      <li><a href="society-admin-dashboard.html">Dashboard</a></li>
+      <li><a href="society-admin-members.html" class="active">Members</a></li>
+      <li><a href="society-admin-documents.html">Documents</a></li>
+      <li><a href="society-admin-profile.html">Profile</a></li>
+    </ul>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="flex-between mb-2">
+        <h2 class="card-title">All Members</h2>
+        <button class="btn btn-primary" onclick="openDialog('addMemberDialog')">Add Member</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Verified</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="membersTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Member Dialog -->
+  <div id="addMemberDialog" class="dialog-overlay">
+    <div class="dialog">
+      <h2 class="dialog-header">Add New Member</h2>
+      <form id="addMemberForm">
+        <div class="form-group">
+          <label>Member Name</label>
+          <input type="text" required placeholder="Enter member name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" required placeholder="Enter email">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" required placeholder="Enter phone number">
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeDialog('addMemberDialog')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    function renderMembers() {
+      const tbody = document.getElementById('membersTable');
+      tbody.innerHTML = mockData.members.map(member => `
+        <tr>
+          <td>${member.id}</td>
+          <td>${member.name}</td>
+          <td>${member.email}</td>
+          <td>${member.phone}</td>
+          <td><span class="status-badge status-${member.status.toLowerCase()}">${member.status}</span></td>
+          <td>${member.verified ? '✅' : '⚠️'}</td>
+          <td>
+            <button class="btn btn-text">View</button>
+            <button class="btn btn-text" style="color: #d32f2f;">Remove</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('addMemberForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const newMember = {
+        id: mockData.members.length + 1,
+        name: e.target[0].value,
+        email: e.target[1].value,
+        phone: e.target[2].value,
+        status: 'Active',
+        verified: false,
+        society: 'Green Valley Apartments'
+      };
+      mockData.members.push(newMember);
+      renderMembers();
+      closeDialog('addMemberDialog');
+      e.target.reset();
+    });
+
+    renderMembers();
+  </script>
+</body>
+</html>

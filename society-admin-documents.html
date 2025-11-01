@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documents - Society Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Society Management</h1>
+    <div class="top-bar-right">
+      <span class="badge" id="userBadge">Society Admin</span>
+      <button class="btn btn-text" onclick="logout()" style="color: white;">Logout</button>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <ul>
+      <li><a href="society-admin-dashboard.html">Dashboard</a></li>
+      <li><a href="society-admin-members.html">Members</a></li>
+      <li><a href="society-admin-documents.html" class="active">Documents</a></li>
+      <li><a href="society-admin-profile.html">Profile</a></li>
+    </ul>
+  </div>
+
+  <div class="container">
+    <div class="card text-center" style="padding: 60px 24px;">
+      <h2 class="card-title">📄 Documents</h2>
+      <p class="text-muted" style="font-size: 16px; margin: 24px 0;">
+        Coming soon: Upload society notices, circulars, and important documents.
+      </p>
+      <p class="text-muted">
+        This feature will allow you to share documents with all members and maintain a document repository.
+      </p>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+</body>
+</html>
