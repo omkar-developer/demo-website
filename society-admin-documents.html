@@ -26,17 +26,61 @@
   </div>
 
   <div class="container">
-    <div class="card text-center" style="padding: 60px 24px;">
+    <div class="card">
       <h2 class="card-title">📄 Documents</h2>
-      <p class="text-muted" style="font-size: 16px; margin: 24px 0;">
-        Coming soon: Upload society notices, circulars, and important documents.
-      </p>
-      <p class="text-muted">
-        This feature will allow you to share documents with all members and maintain a document repository.
-      </p>
+      
+      <div class="upload-section">
+        <input type="file" id="documentUpload" class="file-input" accept=".pdf,.doc,.docx">
+        <button class="btn btn-primary" onclick="handleUpload()">Upload Document</button>
+      </div>
+
+      <div class="documents-list">
+        <h3>Recent Documents</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Document Name</th>
+              <th>Date</th>
+              <th>Size</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="documentsList">
+            <tr>
+              <td>Society_Rules_2023.pdf</td>
+              <td>2023-08-01</td>
+              <td>245 KB</td>
+              <td><button class="btn btn-text">Download</button></td>
+            </tr>
+            <tr>
+              <td>Meeting_Minutes_July.pdf</td>
+              <td>2023-07-15</td>
+              <td>127 KB</td>
+              <td><button class="btn btn-text">Download</button></td>
+            </tr>
+            <tr>
+              <td>Maintenance_Notice_Q3.docx</td>
+              <td>2023-07-01</td>
+              <td>76 KB</td>
+              <td><button class="btn btn-text">Download</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <script src="common.js"></script>
+  <script>
+    function handleUpload() {
+      const fileInput = document.getElementById('documentUpload');
+      if (fileInput.files.length > 0) {
+        alert('Upload successful! (This is a prototype)');
+        fileInput.value = '';
+      } else {
+        alert('Please select a file first');
+      }
+    }
+  </script>
 </body>
 </html>

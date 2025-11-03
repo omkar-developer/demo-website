@@ -29,11 +29,38 @@
     <div class="card">
       <div class="flex-between mb-2">
         <h2 class="card-title">All Members</h2>
-        <button class="btn btn-primary" onclick="openDialog('addMemberDialog')">Add Member</button>
+        <div>
+          <button class="btn btn-secondary" id="groupActionBtn" disabled onclick="openGroupDialog()">Send to Selected (0)</button>
+          <button class="btn btn-primary" onclick="openDialog('addMemberDialog')">Add Member</button>
+        </div>
       </div>
+
+      <!-- New: Search and Filter Controls -->
+      <div class="flex-between mb-2">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by name or email..." 
+                 oninput="handleSearch(this.value)">
+        </div>
+        <div class="filter-controls">
+          <select onchange="handleStatusFilter(this.value)">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <select onchange="handleVerifiedFilter(this.value)">
+            <option value="all">All Verification</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+          </select>
+        </div>
+      </div>
+
       <table>
         <thead>
           <tr>
+            <!-- Added select column -->
+            <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
             <th>ID</th>
             <th>Name</th>
             <th>Email</th>
@@ -73,12 +100,91 @@
     </div>
   </div>
 
+  <!-- New Group Send Dialog -->
+  <div id="groupMessageDialog" class="dialog-overlay">
+    <div class="dialog">
+      <h2 class="dialog-header">Send to Selected Members</h2>
+      <form id="groupMessageForm">
+        <div class="form-group">
+          <label>Type</label>
+          <select required name="messageType">
+            <option value="notification">Notification</option>
+            <option value="message">Message</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject (optional)</label>
+          <input type="text" name="subject" placeholder="Short subject (for notification)">
+        </div>
+        <div class="form-group">
+          <label>Content</label>
+          <textarea name="content" required rows="5" placeholder="Write your notification or message..."></textarea>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeDialog('groupMessageDialog')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="common.js"></script>
   <script>
+    // Add filter state
+    let searchText = '';
+    let statusFilter = 'all';
+    let verifiedFilter = 'all';
+    const selectedMemberIds = new Set();
+
+    // Filter functions
+    function handleSearch(value) {
+      searchText = value.toLowerCase();
+      renderMembers();
+    }
+
+    function handleStatusFilter(value) {
+      statusFilter = value;
+      renderMembers();
+    }
+
+    function handleVerifiedFilter(value) {
+      verifiedFilter = value;
+      renderMembers();
+    }
+
+    function filterMembers(members) {
+      return members.filter(member => {
+        // Search filter
+        const matchesSearch = 
+          searchText === '' || 
+          member.name.toLowerCase().includes(searchText) ||
+          member.email.toLowerCase().includes(searchText);
+
+        // Status filter
+        const matchesStatus = 
+          statusFilter === 'all' || 
+          member.status.toLowerCase() === statusFilter;
+
+        // Verified filter
+        const matchesVerified = 
+          verifiedFilter === 'all' || 
+          (verifiedFilter === 'verified' && member.verified) ||
+          (verifiedFilter === 'unverified' && !member.verified);
+
+        return matchesSearch && matchesStatus && matchesVerified;
+      });
+    }
+
     function renderMembers() {
       const tbody = document.getElementById('membersTable');
-      tbody.innerHTML = mockData.members.map(member => `
+      const filteredMembers = filterMembers(mockData.members);
+      
+      tbody.innerHTML = filteredMembers.map(member => `
         <tr>
+          <td><input type="checkbox" class="row-checkbox" 
+              data-id="${member.id}" 
+              onchange="toggleRowSelection(this)" 
+              ${selectedMemberIds.has(member.id) ? 'checked' : ''}></td>
           <td>${member.id}</td>
           <td>${member.name}</td>
           <td>${member.email}</td>
@@ -91,8 +197,86 @@
           </td>
         </tr>
       `).join('');
+
+      // Update select-all state based on filtered results
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      const filteredIds = new Set(filteredMembers.map(m => m.id));
+      const allFilteredSelected = Array.from(selectedMemberIds)
+        .every(id => !filteredIds.has(id));
+      
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) {
+        selectAll.checked = checkboxes.length > 0 && allFilteredSelected;
+      }
+      updateGroupActionState();
     }
 
+    // Toggle individual row
+    function toggleRowSelection(input) {
+      const id = Number(input.dataset.id);
+      if (input.checked) selectedMemberIds.add(id);
+      else selectedMemberIds.delete(id);
+      updateGroupActionState();
+      // sync select-all
+      const all = document.querySelectorAll('.row-checkbox');
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) selectAll.checked = all.length > 0 && checked.length === all.length;
+    }
+
+    // Toggle select-all
+    function toggleSelectAll(master) {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+        const id = Number(cb.dataset.id);
+        if (master.checked) selectedMemberIds.add(id);
+        else selectedMemberIds.delete(id);
+      });
+      updateGroupActionState();
+    }
+
+    function updateGroupActionState() {
+      const btn = document.getElementById('groupActionBtn');
+      const count = selectedMemberIds.size;
+      if (btn) {
+        btn.disabled = count === 0;
+        btn.textContent = `Send to Selected (${count})`;
+      }
+    }
+
+    function openGroupDialog() {
+      if (selectedMemberIds.size === 0) {
+        alert('Please select one or more members to send to.');
+        return;
+      }
+      openDialog('groupMessageDialog');
+    }
+
+    // Handle group send (mock)
+    document.getElementById('groupMessageForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const type = form.messageType.value;
+      const subject = form.subject.value;
+      const content = form.content.value;
+      const recipients = Array.from(selectedMemberIds);
+
+      console.log('Sending', { type, subject, content, recipients });
+      alert(`${type === 'notification' ? 'Notification' : 'Message'} sent to ${recipients.length} members.`);
+
+      // clear selection and UI
+      selectedMemberIds.clear();
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = false);
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) selectAll.checked = false;
+      updateGroupActionState();
+      closeDialog('groupMessageDialog');
+      form.reset();
+    });
+
+    // Add Member form submit (existing behavior)
     document.getElementById('addMemberForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const newMember = {
@@ -110,7 +294,30 @@
       e.target.reset();
     });
 
+    // Initial render
     renderMembers();
   </script>
+
+  <style>
+    .search-box input {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .filter-controls select {
+      padding: 8px;
+      margin-left: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
 </body>
 </html>

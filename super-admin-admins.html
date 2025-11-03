@@ -29,11 +29,17 @@
     <div class="card">
       <div class="flex-between mb-2">
         <h2 class="card-title">Society Admins</h2>
-        <button class="btn btn-primary" onclick="openDialog('addAdminDialog')">Create Admin</button>
+        <div>
+          <!-- New group action button (disabled when no selection) -->
+          <button class="btn btn-secondary" id="groupActionBtn" disabled onclick="openGroupDialog()">Send to Selected (0)</button>
+          <button class="btn btn-primary" onclick="openDialog('addAdminDialog')">Create Admin</button>
+        </div>
       </div>
       <table>
         <thead>
           <tr>
+            <!-- New checkbox column header -->
+            <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
             <th>ID</th>
             <th>Name</th>
             <th>Email</th>
@@ -71,12 +77,45 @@
     </div>
   </div>
 
+  <!-- New Group Send Dialog -->
+  <div id="groupMessageDialog" class="dialog-overlay">
+    <div class="dialog">
+      <h2 class="dialog-header">Send to Selected Members</h2>
+      <form id="groupMessageForm">
+        <div class="form-group">
+          <label>Type</label>
+          <select required name="messageType">
+            <option value="notification">Notification</option>
+            <option value="message">Message</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject (optional)</label>
+          <input type="text" name="subject" placeholder="Short subject (for notification)">
+        </div>
+        <div class="form-group">
+          <label>Content</label>
+          <textarea name="content" required rows="5" placeholder="Write your notification or message..."></textarea>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeDialog('groupMessageDialog')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="common.js"></script>
   <script>
+    // Selection state for admins (ids)
+    const selectedAdminIds = new Set();
+
     function renderAdmins() {
       const tbody = document.getElementById('adminsTable');
+      // Render rows with a checkbox cell; preserve checked state if selected
       tbody.innerHTML = mockData.admins.map(admin => `
         <tr>
+          <td><input type="checkbox" class="row-checkbox" data-id="${admin.id}" onchange="toggleRowSelection(this)" ${selectedAdminIds.has(admin.id) ? 'checked' : ''}></td>
           <td>${admin.id}</td>
           <td>${admin.name}</td>
           <td>${admin.email}</td>
@@ -87,6 +126,12 @@
           </td>
         </tr>
       `).join('');
+      // ensure select-all checkbox reflects current state
+      const all = document.querySelectorAll('.row-checkbox');
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) selectAll.checked = all.length > 0 && checked.length === all.length;
+      updateGroupActionState();
     }
 
     function populateSocietySelect() {
@@ -96,6 +141,75 @@
       ).join('');
     }
 
+    // Toggle an individual row checkbox
+    function toggleRowSelection(input) {
+      const id = Number(input.dataset.id);
+      if (input.checked) selectedAdminIds.add(id);
+      else selectedAdminIds.delete(id);
+      updateGroupActionState();
+      // sync select-all checkbox
+      const all = document.querySelectorAll('.row-checkbox');
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) selectAll.checked = all.length > 0 && checked.length === all.length;
+    }
+
+    // Select or deselect all rows
+    function toggleSelectAll(master) {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+        const id = Number(cb.dataset.id);
+        if (master.checked) selectedAdminIds.add(id);
+        else selectedAdminIds.delete(id);
+      });
+      updateGroupActionState();
+    }
+
+    // Update the group action button state and label
+    function updateGroupActionState() {
+      const btn = document.getElementById('groupActionBtn');
+      const count = selectedAdminIds.size;
+      if (btn) {
+        btn.disabled = count === 0;
+        btn.textContent = `Send to Selected (${count})`;
+      }
+    }
+
+    // Open the group dialog (verifies at least one selected)
+    function openGroupDialog() {
+      if (selectedAdminIds.size === 0) {
+        alert('Please select one or more members to send to.');
+        return;
+      }
+      openDialog('groupMessageDialog'); // common.js should handle showing dialog overlay
+    }
+
+    // Handle group message form submit (mock send)
+    document.getElementById('groupMessageForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const type = form.messageType.value;
+      const subject = form.subject.value;
+      const content = form.content.value;
+      const recipients = Array.from(selectedAdminIds);
+
+      // Mock sending — replace with real API call later
+      console.log('Sending', { type, subject, content, recipients });
+      alert(`${type === 'notification' ? 'Notification' : 'Message'} sent to ${recipients.length} members.`);
+
+      // Clear selection after send and close dialog
+      selectedAdminIds.clear();
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = false);
+      const selectAll = document.getElementById('selectAllCheckbox');
+      if (selectAll) selectAll.checked = false;
+      updateGroupActionState();
+      closeDialog('groupMessageDialog');
+      form.reset();
+    });
+
+    // Add Admin form submit — keep existing behavior but also re-render
     document.getElementById('addAdminForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const newAdmin = {
@@ -110,6 +224,7 @@
       e.target.reset();
     });
 
+    // Initial render
     renderAdmins();
     populateSocietySelect();
   </script>

@@ -321,3 +321,38 @@ input:focus, select:focus {
 .hidden {
   display: none;
 }
+
+.upload-section {
+  padding: 20px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.file-input {
+  margin-bottom: 16px;
+  display: block;
+}
+
+.documents-list {
+  margin-top: 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.table th {
+  font-weight: 500;
+  color: #666;
+}
